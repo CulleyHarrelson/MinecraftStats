@@ -1,14 +1,6 @@
 #!/usr/bin/env python3
-# coding: utf-8
-
-# # Minecraft Stats
-# 
-# This notebook summarize minecraft stats files across all worlds saved on the local machine. PathLib is used - configure pathlib to work with your operating system.
-# 
-# The first code cell (immediately below) builds the 
-
-# In[1]:
-
+# in this file I was playing with generating panel servers with a python script and 
+# panel --autoreload
 
 import pandas as pd
 import re
@@ -28,7 +20,6 @@ local_user = 'culley'
 path = Path('/Users/{user}/Library/Application Support/minecraft/saves/'.format(user=local_user))
 stats_files = list(path.rglob("*/stats/*.json"))
 nbtfiles = list(path.rglob("*/level.dat"))
-
 
 def minecraft_key(key_name):
     return 'minecraft:{key}'.format(key=key_name)
@@ -115,30 +106,31 @@ for file_name in stats_files:
         print('Key Error:  ', file_name.as_uri())
 
 
-
-# In[2]:
-
-
 pn.extension()
 
+def wood_type_plot():
+    woods = minecraft_stats.groupby('wood_type').sum()
+    woods['id'] = woods.index
+    woods = woods.drop(woods.index[0])
+    woods_long_format = pd.melt(woods, id_vars=['id'], value_vars=['crafted', 'mined', 'picked_up', 'used'])
+    woods_long_format['variable'] = woods_long_format['variable'].replace('picked_up', 'picked up')
+    woods_long_format['id'] = woods_long_format['id'].replace('dark_oak', 'dark oak')
+    wood_type_plot = woods_long_format.hvplot.bar('id', 'value', 
+                                by='variable', 
+                                legend='top_left', 
+                                height=500, 
+                                width=1000,
+                                ylabel='Total',
+                                xlabel='Wood Type Statistics',
+                                rot=60, 
+                                cmap='Category20',
+                                title='Wood Type Summary for {cnt} Saved Worlds'.format(cnt=minecraft_stats['world_name'].nunique()))
 
-woods = minecraft_stats.groupby('wood_type').sum()
-woods['id'] = woods.index
-woods = woods.drop(woods.index[0])
-woods_long_format = pd.melt(woods, id_vars=['id'], value_vars=['crafted', 'mined', 'picked_up', 'used'])
-woods_long_format['variable'] = woods_long_format['variable'].replace('picked_up', 'picked up')
-woods_long_format['id'] = woods_long_format['id'].replace('dark_oak', 'dark oak')
-wood_type_plot = woods_long_format.hvplot.bar('id', 'value', 
-                             by='variable', 
-                             legend='top_left', 
-                             height=500, 
-                             width=1000,
-                             ylabel='Total',
-                             xlabel='Wood Type Statistics',
-                             rot=60, 
-                             cmap='Category20',
-                             title='Wood Type Summary for {cnt} Saved Worlds'.format(cnt=minecraft_stats['world_name'].nunique()))
 
+
+    return wood_type_plot
+
+wood_type_plot =   wood_type_plot()
 
 wood_type_plot_description = pn.pane.Markdown("""
 
@@ -147,15 +139,6 @@ mining an oak trapdoor is included in the "mined" tally.
 
 """, width=1000)
 
-wood_type_plot
-
-
-
-# In[3]:
-
-
-#hvplot.help('bar', generic=False, docstring=False)
-#hvplot.help('scatter', generic=False, style=False)
 
 path = Path('/Users/{user}/Library/Application Support/minecraft/logs/'.format(user=local_user))
 files = list(path.rglob("*.log.gz"))
@@ -245,60 +228,48 @@ bootstrap.main.append(log_in_times_plot)
 bootstrap.main.append(wood_type_plot_description)
 bootstrap.main.append(wood_type_plot)
 
+#bootstrap.servable();
 
-bootstrap.servable();
-
-bootstrap.save(filename='MinecraftStats.html')
-
-
-# In[23]:
+# bootstrap.save(filename='MinecraftStats.html')
+bootstrap.servable()
 
 
-from datetime import datetime
+# from datetime import datetime
 
 # Get the current date
-current_date = datetime.now()
+# current_date = datetime.now()
 
-# Format the date as yyyy-mm-dd
-formatted_date = current_date.strftime('%Y-%m-%d')
+# # Format the date as yyyy-mm-dd
+# formatted_date = current_date.strftime('%Y-%m-%d')
 
+# template = pn.template.FastGridTemplate(
+#     site="MinecraftStats", title='XX world analysis: ' + formatted_date,
+#     sidebar=md,
+# )
 
-
-template = pn.template.FastGridTemplate(
-    site="MinecraftStats", title='XX world analysis: ' + formatted_date,
-    sidebar=md,
-)
-
-#gspec[0:1, 3:4] = pn.Spacer(background='purple', margin=0)
+# #gspec[0:1, 3:4] = pn.Spacer(background='purple', margin=0)
 
 
-template.main[0:3, 1:] = log_in_times_plot
-template.main[3:6, 1:] = wood_type_plot
+# template.main[0:3, 1:] = log_in_times_plot
+# template.main[3:6, 1:] = wood_type_plot
 
-template.save(filename='MinecraftStats2.html')
+# template.save(filename='MinecraftStats2.html')
+# template.servable()
 
 
+
+# Add these:
 #meta_description (str): A meta description to add to the document head for search engine optimization. For example ‘P.A. Nelson’.
-
 #meta_keywords (str): Meta keywords to add to the document head for search engine optimization.
-
 #meta_author (str): A meta author to add to the the document head for search engine optimization. For example ‘P.A. Nelson’.
-
 #meta_refresh (str): A meta refresh rate to add to the document head. For example ‘30’ will instruct the browser to refresh every 30 seconds. Default is ‘’, i.e. no automatic refresh.
-
 #meta_viewport (str): A meta viewport to add to the header.
-
 #base_url (str): Specifies the base URL for all relative URLs in a page. Default is ‘’, i.e. not the domain.
-
 #base_target (str): Specifies the base Target for all relative URLs in a page. Default is _self.
-
-
 
 # ## Extract world name and hardcore byte flag from level.dat
 # 
 # work in progress
-
-# In[8]:
 
 
 from nbtlib import File
@@ -326,35 +297,33 @@ world_types.describe()
 
 # In[20]:
 
+# import numpy as np
 
-ACCENT_COLOR = pn.template.FastGridTemplate.accent_base_color
-XS = np.linspace(0, np.pi)
+# ACCENT_COLOR = pn.template.FastGridTemplate.accent_base_color
+# XS = np.linspace(0, np.pi)
 
-def sine(freq, phase):
-    return hv.Curve((XS, np.sin(XS * freq + phase))).opts(
-        responsive=True, min_height=400, title="Sine", color=ACCENT_COLOR
-    ).opts(line_width=6)
+# def sine(freq, phase):
+#     return hv.Curve((XS, np.sin(XS * freq + phase))).opts(
+#         responsive=True, min_height=400, title="Sine", color=ACCENT_COLOR
+#     ).opts(line_width=6)
 
-def cosine(freq, phase):
-    return hv.Curve((XS, np.cos(XS * freq + phase))).opts(
-        responsive=True, min_height=400, title="Cosine", color=ACCENT_COLOR
-    ).opts(line_width=6)
+# def cosine(freq, phase):
+#     return hv.Curve((XS, np.cos(XS * freq + phase))).opts(
+#         responsive=True, min_height=400, title="Cosine", color=ACCENT_COLOR
+#     ).opts(line_width=6)
 
-freq = pn.widgets.FloatSlider(name="Frequency", start=0, end=10, value=2)
-phase = pn.widgets.FloatSlider(name="Phase", start=0, end=np.pi)
+# freq = pn.widgets.FloatSlider(name="Frequency", start=0, end=10, value=2)
+# phase = pn.widgets.FloatSlider(name="Phase", start=0, end=np.pi)
 
-sine = pn.bind(sine, freq=freq, phase=phase)
-cosine = pn.bind(cosine, freq=freq, phase=phase)
+# sine = pn.bind(sine, freq=freq, phase=phase)
+# cosine = pn.bind(cosine, freq=freq, phase=phase)
 
-template = pn.template.FastGridTemplate(
-    site="Panel", title="FastGridTemplate",
-    sidebar=[pn.pane.Markdown("## Settings"), freq, phase],
-)
+# template = pn.template.FastGridTemplate(
+#     site="Panel", title="FastGridTemplate",
+#     sidebar=[pn.pane.Markdown("## Settings"), freq, phase],
+# )
 
-
-template.main[:2, 1:] = pn.pane.HoloViews(hv.DynamicMap(sine), sizing_mode="stretch_both")
-template.main[2:4, 1:] = pn.pane.HoloViews(hv.DynamicMap(cosine), sizing_mode="stretch_both")
-template.main[4:5, 1:] = pn.pane.Markdown("# Hello World!")
-
-template.save("my_plots.html")
-
+# template.main[:2, 1:] = pn.pane.HoloViews(hv.DynamicMap(sine), sizing_mode="stretch_both")
+# template.main[2:4, 1:] = pn.pane.HoloViews(hv.DynamicMap(cosine), sizing_mode="stretch_both")
+# template.main[4:5, 1:] = pn.pane.Markdown("# Hello World! \n ## From VS Code")
+# template.save("my_plots.html")
